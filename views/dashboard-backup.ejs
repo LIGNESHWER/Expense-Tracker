@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Expense Tracker</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('expense-tracker-theme');
+          if (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            stored = 'dark';
+          }
+          if (stored) {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (error) {
+          /* no-op */
+        }
+      }());
+    </script>
+  </head>
+  <body class="dashboard-page">
+    <% const safeAnalytics = analytics || {}; %>
+    <% const totals = safeAnalytics.totals || { income: 0, expense: 0, savings: 0, savingsRate: 0 }; %>
+    <% const todayIso = new Date().toISOString().slice(0, 10); %>
+    <% const activeFormType = formData && formData.type ? formData.type : ''; %>
+    <% const incomeFormData = activeFormType === 'income' ? formData : {}; %>
+    <% const expenseFormData = activeFormType === 'expense' ? formData : {}; %>
+    <header class="top-bar">
+      <div class="brand">
+        <button
+          type="button"
+          class="nav-toggle"
+          data-nav-toggle
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+          aria-controls="primary-nav"
+        >
+          <span class="nav-toggle-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Menu</span>
+        </button>
+        <div>
+          <h1>Expense Tracker</h1>
+          <p class="welcome">Welcome back, <strong><%= user.name %></strong></p>
+        </div>
+      </div>
+  <nav id="primary-nav" class="main-nav" data-nav aria-label="Primary navigation">
+        <a class="nav-link active" href="/transactions">Dashboard</a>
+        <a class="nav-link" href="/reports">Reports</a>
+  <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle theme">Dark</button>
+        <form action="/logout" method="POST">
+          <button type="submit" class="btn ghost">Logout</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="card summary">
+        <h2>Overview</h2>
+        <div class="summary-metrics">
+          <article>
+            <h3>Total Income</h3>
+            <p class="metric income" data-metric="income">Rs <%= Number(totals.income || 0).toFixed(2) %></p>
+          </article>
+          <article>
+            <h3>Total Expense</h3>
+            <p class="metric expense" data-metric="expense">Rs <%= Number(totals.expense || 0).toFixed(2) %></p>
+          </article>
+          <article>
+            <h3>Savings</h3>
+            <p class="metric savings" data-metric="savings">Rs <%= Number(totals.savings || 0).toFixed(2) %></p>
+          </article>
+          <article>
+            <h3>Savings Rate</h3>
+            <p class="metric" data-metric="savingsRate"><%= Number(totals.savingsRate || 0).toFixed(1) %>%</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-header">
+          <h2>Income vs Expense</h2>
+        </div>
+        <p class="empty-state" data-empty="income-vs-expense">Add income and expense entries to unlock this chart.</p>
+        <canvas id="incomeVsExpenseChart" class="hidden"></canvas>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-header">
+          <h2>Savings Trend</h2>
+        </div>
+        <p class="empty-state" data-empty="savings-trend">Add transactions to see how your savings trend evolves.</p>
+        <canvas id="savingsTrendChart" class="hidden"></canvas>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-header">
+          <h2>Expense by Category</h2>
+        </div>
+        <p class="empty-state" data-empty="expense-categories">Add expense transactions to break down spending by category.</p>
+        <canvas id="expenseCategoryChart" class="hidden"></canvas>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-header">
+          <h2>Income Sources</h2>
+        </div>
+        <p class="empty-state" data-empty="income-sources">Log income entries to analyse your income streams.</p>
+        <canvas id="incomeSourceChart" class="hidden"></canvas>
+      </section>
+
+      <section class="card transaction-form" data-section="income">
+        <div class="form-header">
+          <h2
+            data-role="form-title"
+            data-form="income"
+            data-create-title="Add Income"
+            data-edit-title="Update Income"
+          >
+            <%= incomeFormData && incomeFormData.transactionId ? 'Update Income' : 'Add Income' %>
+          </h2>
+          <button
+            type="button"
+            class="btn ghost <%= incomeFormData && incomeFormData.transactionId ? '' : 'hidden' %>"
+            data-role="cancel-edit"
+            data-form="income"
+          >
+            Cancel Edit
+          </button>
+        </div>
+        <% if (errors && errors.length && activeFormType === 'income') { %>
+        <ul class="alert">
+          <% errors.forEach(function(error){ %>
+          <li><%= error.msg %></li>
+          <% }) %>
+        </ul>
+        <% } %>
+        <form
+          action="<%= incomeFormData && incomeFormData.transactionId ? `/transactions/${incomeFormData.transactionId}` : '/transactions' %>"
+          method="POST"
+          class="form"
+          data-form="income"
+          data-mode="<%= incomeFormData && incomeFormData.transactionId ? 'edit' : 'create' %>"
+          data-transaction-id="<%= incomeFormData && incomeFormData.transactionId ? incomeFormData.transactionId : '' %>"
+          data-default-action="/transactions"
+          data-default-date="<%= todayIso %>"
+        >
+          <input type="hidden" name="_method" data-field="method" value="<%= incomeFormData && incomeFormData.transactionId ? 'PUT' : '' %>" />
+          <input type="hidden" name="type" value="income" />
+
+          <label for="income-amount">Amount</label>
+          <input
+            id="income-amount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            data-field="amount"
+            value="<%= incomeFormData && incomeFormData.amount !== undefined ? incomeFormData.amount : '' %>"
+            required
+          />
+
+          <label for="income-date">Date</label>
+          <input
+            id="income-date"
+            name="date"
+            type="date"
+            data-field="date"
+            value="<%= incomeFormData && incomeFormData.date ? incomeFormData.date : todayIso %>"
+            required
+          />
+
+          <label for="income-category">Source</label>
+          <input
+            id="income-category"
+            name="category"
+            type="text"
+            data-field="category"
+            placeholder="e.g. Salary, Freelance"
+            value="<%= incomeFormData && incomeFormData.category ? incomeFormData.category : '' %>"
+            required
+          />
+
+          <label for="income-description">Description</label>
+          <textarea
+            id="income-description"
+            name="description"
+            rows="3"
+            data-field="description"
+            placeholder="Optional details"
+          ><%= incomeFormData && incomeFormData.description ? incomeFormData.description : '' %></textarea>
+
+          <button
+            type="submit"
+            class="btn primary"
+            data-role="submit"
+            data-form="income"
+            data-create-label="Add Income"
+            data-edit-label="Update Income"
+          >
+            <%= incomeFormData && incomeFormData.transactionId ? 'Update Income' : 'Add Income' %>
+          </button>
+        </form>
+      </section>
+
+      <section class="card transaction-form" data-section="expense">
+        <div class="form-header">
+          <h2
+            data-role="form-title"
+            data-form="expense"
+            data-create-title="Add Expense"
+            data-edit-title="Update Expense"
+          >
+            <%= expenseFormData && expenseFormData.transactionId ? 'Update Expense' : 'Add Expense' %>
+          </h2>
+          <button
+            type="button"
+            class="btn ghost <%= expenseFormData && expenseFormData.transactionId ? '' : 'hidden' %>"
+            data-role="cancel-edit"
+            data-form="expense"
+          >
+            Cancel Edit
+          </button>
+        </div>
+        <% if (errors && errors.length && activeFormType === 'expense') { %>
+        <ul class="alert">
+          <% errors.forEach(function(error){ %>
+          <li><%= error.msg %></li>
+          <% }) %>
+        </ul>
+        <% } %>
+        <form
+          action="<%= expenseFormData && expenseFormData.transactionId ? `/transactions/${expenseFormData.transactionId}` : '/transactions' %>"
+          method="POST"
+          class="form"
+          data-form="expense"
+          data-mode="<%= expenseFormData && expenseFormData.transactionId ? 'edit' : 'create' %>"
+          data-transaction-id="<%= expenseFormData && expenseFormData.transactionId ? expenseFormData.transactionId : '' %>"
+          data-default-action="/transactions"
+          data-default-date="<%= todayIso %>"
+        >
+          <input type="hidden" name="_method" data-field="method" value="<%= expenseFormData && expenseFormData.transactionId ? 'PUT' : '' %>" />
+          <input type="hidden" name="type" value="expense" />
+
+          <label for="expense-amount">Amount</label>
+          <input
+            id="expense-amount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            data-field="amount"
+            value="<%= expenseFormData && expenseFormData.amount !== undefined ? expenseFormData.amount : '' %>"
+            required
+          />
+
+          <label for="expense-date">Date</label>
+          <input
+            id="expense-date"
+            name="date"
+            type="date"
+            data-field="date"
+            value="<%= expenseFormData && expenseFormData.date ? expenseFormData.date : todayIso %>"
+            required
+          />
+
+          <label for="expense-category">Category</label>
+          <input
+            id="expense-category"
+            name="category"
+            type="text"
+            data-field="category"
+            placeholder="e.g. Groceries, Rent"
+            value="<%= expenseFormData && expenseFormData.category ? expenseFormData.category : '' %>"
+            required
+          />
+
+          <label for="expense-description">Description</label>
+          <textarea
+            id="expense-description"
+            name="description"
+            rows="3"
+            data-field="description"
+            placeholder="Optional details"
+          ><%= expenseFormData && expenseFormData.description ? expenseFormData.description : '' %></textarea>
+
+          <button
+            type="submit"
+            class="btn primary"
+            data-role="submit"
+            data-form="expense"
+            data-create-label="Add Expense"
+            data-edit-label="Update Expense"
+          >
+            <%= expenseFormData && expenseFormData.transactionId ? 'Update Expense' : 'Add Expense' %>
+          </button>
+        </form>
+      </section>
+
+      <section class="card transaction-table">
+        <h2>Transaction History</h2>
+        <% if (!transactions.length) { %>
+        <p class="empty-state">No transactions yet. Add your first one!</p>
+        <% } else { %>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th class="numeric">Amount (Rs)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% transactions.forEach(function(transaction){ %>
+              <tr data-id="<%= transaction._id %>">
+                <td><%= new Date(transaction.date).toISOString().slice(0, 10) %></td>
+                <td class="capitalize <%= transaction.type %>"><%= transaction.type %></td>
+                <td><%= transaction.category %></td>
+                <td><%= transaction.description || '-' %></td>
+                <td class="numeric"><%= Number(transaction.amount || 0).toFixed(2) %></td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      type="button"
+                      class="btn ghost edit-transaction"
+                      data-id="<%= transaction._id %>"
+                      data-amount="<%= Number(transaction.amount || 0).toFixed(2) %>"
+                      data-date="<%= new Date(transaction.date).toISOString().slice(0, 10) %>"
+                      data-type="<%= transaction.type %>"
+                      data-category="<%= transaction.category %>"
+                      data-description="<%= transaction.description || '' %>"
+                    >
+                      Edit
+                    </button>
+                    <form action="/transactions/<%= transaction._id %>?_method=DELETE" method="POST">
+                      <input type="hidden" name="_method" value="DELETE" />
+                      <button type="submit" class="btn danger" onclick="return confirm('Delete this transaction?');">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <nav class="pagination">
+          <% if (pagination.hasPrevPage) { %>
+          <a class="btn ghost" href="/transactions?page=<%= pagination.currentPage - 1 %>">Previous</a>
+          <% } else { %>
+          <span class="btn ghost disabled">Previous</span>
+          <% } %>
+
+          <span class="page-indicator">Page <%= pagination.currentPage %> of <%= pagination.totalPages %></span>
+
+          <% if (pagination.hasNextPage) { %>
+          <a class="btn ghost" href="/transactions?page=<%= pagination.currentPage + 1 %>">Next</a>
+          <% } else { %>
+          <span class="btn ghost disabled">Next</span>
+          <% } %>
+        </nav>
+        <% } %>
+      </section>
+    </main>
+
+    <script id="dashboard-analytics-data" type="application/json"><%- JSON.stringify(analytics || null) %></script>
+    <script src="/js/ui.js"></script>
+    <script src="/vendor/chart.umd.js"></script>
+    <script src="/js/dashboard.js"></script>
+  </body>
+</html>

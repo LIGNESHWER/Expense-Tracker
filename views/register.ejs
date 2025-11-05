@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register | Expense Tracker</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('expense-tracker-theme');
+          if (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            stored = 'dark';
+          }
+          if (stored) {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (error) {
+          /* ignore */
+        }
+      }());
+    </script>
+  </head>
+  <body class="auth-page">
+    <section class="auth-card">
+      <div class="theme-switcher">
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle theme">Dark</button>
+      </div>
+      <h1>Create Account</h1>
+      <% if (errors && errors.length) { %>
+      <ul class="alert">
+        <% errors.forEach(function(error){ %>
+        <li><%= error.msg %></li>
+        <% }) %>
+      </ul>
+      <% } %>
+      <form action="/register" method="POST" class="form">
+        <label for="name">Name</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          value="<%= formData.name || '' %>"
+          placeholder="John Doe"
+          required
+        />
+
+        <label for="email">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          value="<%= formData.email || '' %>"
+          placeholder="you@example.com"
+          required
+        />
+
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input id="password" name="password" type="password" minlength="8" required />
+          <button type="button" class="password-toggle" onclick="togglePassword('password')" aria-label="Show password">
+            <span class="show-icon">👁️</span>
+            <span class="hide-icon" style="display: none;">🙈</span>
+          </button>
+        </div>
+
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="password-field">
+          <input id="confirmPassword" name="confirmPassword" type="password" minlength="8" required />
+          <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')" aria-label="Show password">
+            <span class="show-icon">👁️</span>
+            <span class="hide-icon" style="display: none;">🙈</span>
+          </button>
+        </div>
+
+        <button type="submit" class="btn primary">Sign Up</button>
+      </form>
+      <p>
+        Already have an account?
+        <a href="/login">Log in</a>
+      </p>
+    </section>
+    <script src="/js/ui.js"></script>
+    <script>
+      function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.nextElementSibling;
+        const showIcon = button.querySelector('.show-icon');
+        const hideIcon = button.querySelector('.hide-icon');
+        
+        if (input.type === 'password') {
+          input.type = 'text';
+          showIcon.style.display = 'none';
+          hideIcon.style.display = 'inline';
+        } else {
+          input.type = 'password';
+          showIcon.style.display = 'inline';
+          hideIcon.style.display = 'none';
+        }
+      }
+    </script>
+  </body>
+</html>
