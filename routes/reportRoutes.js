@@ -1,6 +1,7 @@
 const express = require('express');
 const PDFDocument = require('pdfkit');
 const { buildReport } = require('../utils/reportService');
+const { buildAnalytics } = require('../utils/analyticsService');
 const { sanitizeText } = require('../utils/validationHelpers');
 
 const router = express.Router();
@@ -89,7 +90,7 @@ function buildCsv(report) {
   lines.push('Date,Type,Category,Description,Amount');
   report.transactions.forEach((transaction) => {
     lines.push(
-  `${formatDate(transaction.date)},${transaction.type},${escapeCsv(sanitizeText(transaction.category || ''))},${escapeCsv(sanitizeText(transaction.description || ''))},${Number(transaction.amount || 0).toFixed(2)}`,
+      `${formatDate(transaction.date)},${transaction.type},${escapeCsv(sanitizeText(transaction.category || ''))},${escapeCsv(sanitizeText(transaction.description || ''))},${Number(transaction.amount || 0).toFixed(2)}`,
     );
   });
 
@@ -191,7 +192,10 @@ function renderPdf(res, report) {
 router.get('/', async (req, res, next) => {
   try {
     const queryFilters = parseFilters(req.query);
-    const report = await buildReport(req.session.user.id, queryFilters);
+    const [report, analytics] = await Promise.all([
+      buildReport(req.session.user.id, queryFilters),
+      buildAnalytics(req.session.user.id, { months: 6 }),
+    ]);
     const queryString = buildQueryString(report.filters);
     const querySuffix = queryString ? `&${queryString}` : '';
 
@@ -199,6 +203,7 @@ router.get('/', async (req, res, next) => {
       user: req.session.user,
       report,
       querySuffix,
+      analytics,
     });
   } catch (error) {
     return next(error);

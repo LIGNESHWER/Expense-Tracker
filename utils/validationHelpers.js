@@ -12,6 +12,12 @@ function sanitizeText(value) {
   return normalized;
 }
 
+function normalizeCategory(value) {
+  const sanitized = sanitizeText(value);
+  return sanitized.toLowerCase();
+}
+
 module.exports = {
   sanitizeText,
+  normalizeCategory,
 };

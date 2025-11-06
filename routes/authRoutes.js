@@ -70,6 +70,8 @@ router.post(
         id: user._id,
         name: user.name,
         email: user.email,
+        currency: user.currency || 'USD',
+        profilePhoto: user.profilePhoto || null,
       };
 
       return res.redirect('/dashboard');
@@ -126,6 +128,8 @@ router.post(
         id: user._id,
         name: user.name,
         email: user.email,
+        currency: user.currency || 'USD',
+        profilePhoto: user.profilePhoto || null,
       };
 
       return res.redirect('/dashboard');

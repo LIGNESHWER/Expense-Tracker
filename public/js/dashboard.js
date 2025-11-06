@@ -258,15 +258,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		const totals = analytics.totals || {};
 		const charts = analytics.charts || {};
 
-		setMetric('income', totals.income);
-		setMetric('expense', totals.expense);
-		setMetric('savings', totals.savings);
-		setMetric('savingsRate', totals.savingsRate, formatPercentage);
+		// Only update metrics if they exist on the page (dashboard page)
+		if (document.querySelector('[data-metric="income"]')) {
+			setMetric('income', totals.income);
+			setMetric('expense', totals.expense);
+			setMetric('savings', totals.savings);
+			setMetric('savingsRate', totals.savingsRate, formatPercentage);
+		}
 
-		renderIncomeVsExpense(charts.incomeVsExpense || {});
-		renderSavingsTrend(charts.savingsTrend || {});
-		renderPieChart('expenseByCategory', 'expenseCategoryChart', 'expense-categories', charts.expenseByCategory || {});
-		renderPieChart('incomeBySource', 'incomeSourceChart', 'income-sources', charts.incomeBySource || {});
+		// Only render charts if canvas elements exist (reports page)
+		if (document.getElementById('incomeVsExpenseChart')) {
+			renderIncomeVsExpense(charts.incomeVsExpense || {});
+		}
+		if (document.getElementById('savingsTrendChart')) {
+			renderSavingsTrend(charts.savingsTrend || {});
+		}
+		if (document.getElementById('expenseCategoryChart')) {
+			renderPieChart('expenseByCategory', 'expenseCategoryChart', 'expense-categories', charts.expenseByCategory || {});
+		}
+		if (document.getElementById('incomeSourceChart')) {
+			renderPieChart('incomeBySource', 'incomeSourceChart', 'income-sources', charts.incomeBySource || {});
+		}
 	}
 
 	async function fetchAnalytics() {
@@ -496,10 +508,169 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+	function createLimitFormController(form) {
+		if (!form) {
+			return null;
+		}
+
+		const state = {
+			mode: form.dataset.mode === 'edit' ? 'edit' : 'create',
+		};
+
+		const categoryField = form.querySelector('[data-field="category"]');
+		const limitField = form.querySelector('[data-field="limit"]');
+		const idField = form.querySelector('[data-field="limitId"]');
+		const submitButton = form.querySelector('[data-role="submit-limit"]');
+		const cancelButton = form.querySelector('[data-role="cancel-limit-edit"]');
+		const labels = {
+			create: submitButton ? submitButton.dataset.createLabel || 'Save Limit' : 'Save Limit',
+			edit: submitButton ? submitButton.dataset.editLabel || 'Update Limit' : 'Update Limit',
+		};
+
+		function formatLimitValue(value) {
+			if (value === '' || value === null || value === undefined) {
+				return '';
+			}
+			const numeric = Number.parseFloat(value);
+			return Number.isFinite(numeric) ? numeric.toFixed(2) : '';
+		}
+
+		function clearValidity() {
+			if (categoryField) {
+				categoryField.setCustomValidity('');
+			}
+			if (limitField) {
+				limitField.setCustomValidity('');
+			}
+		}
+
+		function setMode(mode, values = {}) {
+			state.mode = mode;
+			form.dataset.mode = mode;
+			clearValidity();
+
+			if (mode === 'edit' && values.limitId) {
+				if (idField) {
+					idField.value = values.limitId;
+				}
+				if (categoryField) {
+					categoryField.value = values.category || '';
+				}
+				if (limitField) {
+					limitField.value = formatLimitValue(values.limit);
+				}
+				if (submitButton) {
+					submitButton.textContent = labels.edit;
+				}
+				if (cancelButton) {
+					cancelButton.classList.remove('hidden');
+				}
+			} else {
+				if (idField) {
+					idField.value = '';
+				}
+				if (categoryField) {
+					categoryField.value = '';
+				}
+				if (limitField) {
+					limitField.value = '';
+				}
+				if (submitButton) {
+					submitButton.textContent = labels.create;
+				}
+				if (cancelButton) {
+					cancelButton.classList.add('hidden');
+				}
+			}
+		}
+
+		setMode(state.mode, {
+			limitId: idField ? idField.value : '',
+			category: categoryField ? categoryField.value : '',
+			limit: limitField ? limitField.value : '',
+		});
+
+		form.addEventListener('submit', (event) => {
+			clearValidity();
+
+			if (categoryField) {
+				const trimmed = categoryField.value.trim();
+				if (!trimmed) {
+					categoryField.setCustomValidity('Enter a category.');
+					categoryField.reportValidity();
+					event.preventDefault();
+					return;
+				}
+				categoryField.value = trimmed;
+			}
+
+			if (limitField) {
+				const numeric = Number.parseFloat(limitField.value);
+				if (!Number.isFinite(numeric) || numeric <= 0) {
+					limitField.setCustomValidity('Enter a limit greater than zero.');
+					limitField.reportValidity();
+					event.preventDefault();
+					return;
+				}
+				limitField.value = numeric.toFixed(2);
+			}
+		});
+
+		if (cancelButton) {
+			cancelButton.addEventListener('click', () => {
+				setMode('create');
+				if (categoryField) {
+					categoryField.focus();
+				}
+			});
+		}
+
+		return {
+			setEditMode(values) {
+				setMode('edit', values);
+				if (categoryField) {
+					categoryField.focus();
+				}
+			},
+			setCreateMode() {
+				setMode('create');
+			},
+		};
+	}
+
+	function initLimitEditButtons(controller) {
+		if (!controller) {
+			return;
+		}
+
+		document.querySelectorAll('.edit-limit').forEach((button) => {
+			button.addEventListener('click', () => {
+				controller.setEditMode({
+					limitId: button.dataset.limitId,
+					category: button.dataset.category || '',
+					limit: button.dataset.limit,
+				});
+			});
+		});
+	}
+
 	const embeddedAnalytics = parseEmbeddedAnalytics();
-	updateDashboard(embeddedAnalytics || createEmptyAnalytics());
-	fetchAnalytics();
+
+	// Only update dashboard and fetch analytics if we have analytics data or are on a page with charts
+	const hasCharts = document.getElementById('incomeVsExpenseChart') !== null;
+	if (embeddedAnalytics || hasCharts) {
+		updateDashboard(embeddedAnalytics || createEmptyAnalytics());
+
+		// Only fetch fresh analytics on dashboard page (not reports page)
+		const isDashboardPage = document.querySelector('[data-limit-form]') !== null;
+		if (isDashboardPage) {
+			fetchAnalytics();
+		}
+	}
 
 	const formControllers = initForms();
 	initEditButtons(formControllers);
+	const limitForm = document.querySelector('[data-limit-form]');
+	const limitController = createLimitFormController(limitForm);
+	initLimitEditButtons(limitController);
 });

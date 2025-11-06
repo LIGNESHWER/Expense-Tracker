@@ -7,6 +7,9 @@ A full-stack expense tracker MVP built with Node.js, Express, MongoDB, and EJS. 
 - Secure user registration and login with hashed passwords
 - Session-based authentication with MongoDB-backed storage
 - CRUD operations for income and expense transactions
+- **Category Budget Limits** - Set spending limits per category with overage tracking
+- **User Profile Management** - Update name, email, profile photo, and currency preferences
+- **Multi-Currency Support** - Choose from 10 major currencies (USD, EUR, GBP, INR, JPY, AUD, CAD, CHF, CNY, SEK)
 - Dashboard with totals, interactive charts (income vs expense, savings trend, categories, and income sources), plus paginated history
 - Reporting workspace with date/category filters and downloadable PDF/CSV exports
 - Responsive navigation with optional dark/light mode toggle
@@ -63,19 +66,24 @@ The app runs on `http://localhost:3000` by default.
 
 1. Register a new user account.
 2. Log in with the same credentials.
-3. Add income or expense transactions via the dashboard form.
-4. Edit or delete existing transactions from the history table.
-5. Review totals, balance, and visual charts that update with each change.
+3. **Configure your profile** - Set your preferred currency, upload a profile photo, and update personal information.
+4. **Set category limits** - Define monthly spending limits for specific categories to track overspending.
+5. Add income or expense transactions via the dashboard form.
+6. Edit or delete existing transactions from the history table.
+7. Review totals, balance, and visual charts that update with each change.
+8. Access the **Reports page** for detailed analytics and data visualization.
 
 ## Project Structure
 
 ```
 ├── server.js           # Express app entry point
-├── models/             # Mongoose models (User, Transaction)
-├── routes/             # Auth, transaction, analytics, and report routes
-├── views/              # EJS templates (auth pages, dashboard, errors)
-├── public/             # Static assets (CSS, JS)
-├── utils/              # Helper utilities
+├── models/             # Mongoose models (User, Transaction, CategoryLimit)
+├── routes/             # Auth, transaction, analytics, report, category limit, and profile routes
+├── views/              # EJS templates (auth pages, dashboard, reports, profile, errors)
+├── public/
+│   ├── css/           # Stylesheets (styles.css, profile.css)
+│   └── js/            # Client-side scripts (dashboard.js, ui.js, profile.js)
+├── utils/              # Helper utilities (auth, validation, analytics, currency formatting)
 ├── .env.example        # Sample environment config
 ├── package.json
 └── README.md

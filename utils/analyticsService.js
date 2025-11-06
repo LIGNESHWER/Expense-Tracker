@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Transaction = require('../models/Transaction');
+const CategoryLimit = require('../models/CategoryLimit');
+const { normalizeCategory } = require('./validationHelpers');
 
 function toObjectId(id) {
   if (id instanceof mongoose.Types.ObjectId) {
@@ -32,7 +34,7 @@ async function buildAnalytics(userId, { months = 6 } = {}) {
   rangeStart.setHours(0, 0, 0, 0);
   rangeStart.setMonth(rangeStart.getMonth() - (normalizedMonths - 1));
 
-  const [totalsAgg, expenseAgg, incomeAgg, monthlyAgg] = await Promise.all([
+  const [totalsAgg, expenseAgg, incomeAgg, monthlyAgg, categoryLimits] = await Promise.all([
     Transaction.aggregate([
       { $match: { user: objectId } },
       {
@@ -76,6 +78,7 @@ async function buildAnalytics(userId, { months = 6 } = {}) {
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]),
+    CategoryLimit.find({ user: objectId }).sort({ category: 1 }).lean(),
   ]);
 
   let incomeTotal = 0;
@@ -100,6 +103,19 @@ async function buildAnalytics(userId, { months = 6 } = {}) {
   const incomeLabels = incomeAgg.map((entry) => entry._id || 'Uncategorized');
   const incomeData = incomeAgg.map((entry) => entry.total);
   const incomeHasValues = incomeData.some((value) => value > 0);
+
+  const expenseTotalsByCategory = new Map();
+
+  expenseAgg.forEach((entry) => {
+    if (typeof entry._id !== 'string') {
+      return;
+    }
+
+    const normalized = normalizeCategory(entry._id);
+    if (normalized) {
+      expenseTotalsByCategory.set(normalized, entry.total);
+    }
+  });
 
   const monthlyMap = new Map();
 
@@ -129,6 +145,24 @@ async function buildAnalytics(userId, { months = 6 } = {}) {
   }
 
   const monthlyHasValues = monthlyIncome.some((value) => value > 0) || monthlyExpense.some((value) => value > 0);
+
+  const limitSummaries = categoryLimits.map((limit) => {
+    const spent = expenseTotalsByCategory.get(limit.normalizedCategory) || 0;
+    const usageRatio = limit.limit > 0 ? spent / limit.limit : 0;
+    const exceeded = spent > limit.limit;
+    const exceededRatio = exceeded ? (spent - limit.limit) / limit.limit : 0;
+
+    return {
+      id: String(limit._id),
+      category: limit.category,
+      limit: limit.limit,
+      spent,
+      remaining: Math.max(limit.limit - spent, 0),
+      percentageUsed: usageRatio * 100,
+      percentageExceeded: exceeded ? exceededRatio * 100 : 0,
+      exceeded,
+    };
+  });
 
   return {
     totals: {
@@ -161,6 +195,7 @@ async function buildAnalytics(userId, { months = 6 } = {}) {
         hasValues: incomeHasValues,
       },
     },
+    categoryLimits: limitSummaries,
   };
 }
 

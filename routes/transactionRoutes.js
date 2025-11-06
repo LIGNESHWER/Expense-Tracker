@@ -39,8 +39,12 @@ router.get('/', async (req, res, next) => {
     const baseQuery = { user: userId };
     const flashErrors = req.session.formErrors || [];
     const flashFormData = req.session.formData || {};
+    const limitErrors = req.session.limitErrors || [];
+    const limitFormData = req.session.limitFormData || {};
     delete req.session.formErrors;
     delete req.session.formData;
+    delete req.session.limitErrors;
+    delete req.session.limitFormData;
 
     const monthsToShow = 6;
 
@@ -67,6 +71,8 @@ router.get('/', async (req, res, next) => {
       },
       errors: flashErrors,
       formData: flashFormData,
+      limitErrors,
+      limitFormData,
       analytics,
     });
   } catch (error) {
@@ -175,26 +181,26 @@ router.post('/delete-all', async (req, res, next) => {
     const bcrypt = require('bcrypt');
 
     if (!password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Password is required to delete all transactions.' 
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required to delete all transactions.'
       });
     }
 
     // Verify password
     const user = await User.findById(req.session.user.id);
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found.' 
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.'
       });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid password. Deletion cancelled.' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password. Deletion cancelled.'
       });
     }
 
@@ -202,8 +208,8 @@ router.post('/delete-all', async (req, res, next) => {
     const userId = new mongoose.Types.ObjectId(req.session.user.id);
     const result = await Transaction.deleteMany({ user: userId });
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: `Successfully deleted ${result.deletedCount} transaction(s).`,
       deletedCount: result.deletedCount
     });

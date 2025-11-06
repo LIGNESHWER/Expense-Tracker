@@ -22,6 +22,15 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 8,
     },
+    currency: {
+      type: String,
+      default: 'USD',
+      enum: ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK'],
+    },
+    profilePhoto: {
+      type: String,
+      default: null, // Will store base64 encoded image or URL
+    },
   },
   { timestamps: true }
 );

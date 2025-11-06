@@ -13,6 +13,8 @@ const authRoutes = require('./routes/authRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const categoryLimitRoutes = require('./routes/categoryLimitRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 const { ensureAuthenticated } = require('./utils/authHelpers');
 
 const app = express();
@@ -62,6 +64,8 @@ app.use(
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.errors = null;
+  res.locals.successMessage = req.session.successMessage || null;
+  delete req.session.successMessage;
   next();
 });
 
@@ -75,8 +79,10 @@ app.get('/', (req, res) => {
 
 app.use('/', authRoutes);
 app.use('/transactions', ensureAuthenticated, transactionRoutes);
+app.use('/category-limits', ensureAuthenticated, categoryLimitRoutes);
 app.use('/api/analytics', ensureAuthenticated, analyticsRoutes);
 app.use('/reports', ensureAuthenticated, reportRoutes);
+app.use('/profile', ensureAuthenticated, profileRoutes);
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
   return res.redirect('/transactions');

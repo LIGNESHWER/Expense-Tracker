@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - Expense Tracker</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+          <div class="sidebar-header">
+            <h2 class="sidebar-title">Expense Tracker</h2>
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+              ◀
+            </button>
+          </div>
+
+          <nav class="sidebar-nav">
+            <a href="/transactions">
+              <span class="nav-icon">📊</span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/reports">
+              <span class="nav-icon">📈</span>
+              <span>Reports</span>
+            </a>
+            <a href="/profile" class="active">
+              <span class="nav-icon">👤</span>
+              <span>Profile</span>
+            </a>
+          </nav>
+
+          <div class="sidebar-footer">
+            <div class="user-info">
+              <% if (user.profilePhoto) { %>
+                <img src="<%= user.profilePhoto %>" alt="<%= user.name %>" class="user-avatar-img" />
+              <% } else { %>
+                <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
+              <% } %>
+              <div class="user-details">
+                <p class="user-name"><%= user.name %></p>
+                <p class="user-email"><%= user.email %></p>
+              </div>
+            </div>
+            <button class="theme-toggle" id="theme-toggle">🌙 Dark Mode</button>
+            <form action="/logout" method="POST" style="width: 100%">
+              <button type="submit" class="btn btn-danger" style="width: 100%">Logout</button>
+            </form>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="container">
+          <div class="page-header">
+            <h1>Profile Settings</h1>
+            <p class="page-subtitle">Manage your account settings and preferences</p>
+          </div>
+
+          <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+            <div class="alert alert-success">
+              <%= successMessage %>
+            </div>
+          <% } %>
+
+          <% if (errors && errors.length > 0) { %>
+            <div class="alert alert-error">
+              <% errors.forEach(function(error) { %>
+                <p><%= error.msg %></p>
+              <% }); %>
+            </div>
+          <% } %>
+
+          <!-- Profile Photo Section -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Profile Photo</h2>
+            </div>
+            <div class="card-body">
+              <div class="profile-photo-section">
+                <div class="profile-photo-preview">
+                  <% if (user.profilePhoto) { %>
+                    <img src="<%= user.profilePhoto %>" alt="Profile Photo" id="profile-preview" class="profile-photo-large" />
+                  <% } else { %>
+                    <div class="profile-photo-placeholder" id="profile-preview">
+                      <%= user.name.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                </div>
+                <div class="profile-photo-actions">
+                  <p class="help-text">Upload a profile photo or use an emoji/avatar. Maximum size: 200KB</p>
+                  <div class="photo-buttons">
+                    <button type="button" class="btn btn-secondary" id="upload-photo-btn">
+                      📷 Choose Photo
+                    </button>
+                    <input type="file" id="photo-upload" accept="image/*" style="display: none;" />
+                    <% if (user.profilePhoto) { %>
+                      <form action="/profile/remove-photo" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-outline">Remove Photo</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Information Form -->
+          <form action="/profile/update" method="POST" id="profile-form">
+            <div class="card">
+              <div class="card-header">
+                <h2>Personal Information</h2>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="name">Full Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    class="form-input"
+                    value="<%= formData.name || user.name %>"
+                    required
+                    minlength="2"
+                    maxlength="100"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="form-input"
+                    value="<%= formData.email || user.email %>"
+                    required
+                  />
+                </div>
+
+                <!-- Hidden input for profile photo base64 -->
+                <input type="hidden" id="profilePhoto" name="profilePhoto" value="" />
+              </div>
+            </div>
+
+            <!-- Currency Preferences -->
+            <div class="card">
+              <div class="card-header">
+                <h2>Currency Preferences</h2>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="currency">Default Currency</label>
+                  <select id="currency" name="currency" class="form-input">
+                    <option value="USD" <%= (formData.currency || user.currency) === 'USD' ? 'selected' : '' %>>
+                      🇺🇸 US Dollar ($)
+                    </option>
+                    <option value="EUR" <%= (formData.currency || user.currency) === 'EUR' ? 'selected' : '' %>>
+                      🇪🇺 Euro (€)
+                    </option>
+                    <option value="GBP" <%= (formData.currency || user.currency) === 'GBP' ? 'selected' : '' %>>
+                      🇬🇧 British Pound (£)
+                    </option>
+                    <option value="INR" <%= (formData.currency || user.currency) === 'INR' ? 'selected' : '' %>>
+                      🇮🇳 Indian Rupee (₹)
+                    </option>
+                    <option value="JPY" <%= (formData.currency || user.currency) === 'JPY' ? 'selected' : '' %>>
+                      🇯🇵 Japanese Yen (¥)
+                    </option>
+                    <option value="AUD" <%= (formData.currency || user.currency) === 'AUD' ? 'selected' : '' %>>
+                      🇦🇺 Australian Dollar (A$)
+                    </option>
+                    <option value="CAD" <%= (formData.currency || user.currency) === 'CAD' ? 'selected' : '' %>>
+                      🇨🇦 Canadian Dollar (C$)
+                    </option>
+                    <option value="CHF" <%= (formData.currency || user.currency) === 'CHF' ? 'selected' : '' %>>
+                      🇨🇭 Swiss Franc (Fr)
+                    </option>
+                    <option value="CNY" <%= (formData.currency || user.currency) === 'CNY' ? 'selected' : '' %>>
+                      🇨🇳 Chinese Yuan (¥)
+                    </option>
+                    <option value="SEK" <%= (formData.currency || user.currency) === 'SEK' ? 'selected' : '' %>>
+                      🇸🇪 Swedish Krona (kr)
+                    </option>
+                  </select>
+                  <p class="help-text">This currency will be used for displaying all transaction amounts</p>
+                </div>
+
+                <div class="currency-preview">
+                  <h3>Preview</h3>
+                  <div class="currency-example">
+                    <span>Sample Amount:</span>
+                    <strong id="currency-example">$1,234.56</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-large">
+                💾 Save Changes
+              </button>
+              <a href="/transactions" class="btn btn-outline">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+
+    <script src="/js/ui.js"></script>
+    <script src="/js/profile.js"></script>
+  </body>
+</html>

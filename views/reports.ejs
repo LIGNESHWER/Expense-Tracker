@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reports | Expense Tracker</title>
-    <link rel="stylesheet" href="/css/styles.css" />
-    <script>
-      (function () {
-        try {
-          var stored = localStorage.getItem('expense-tracker-theme');
-          if (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            stored = 'dark';
-          }
-          if (stored) {
-            document.documentElement.setAttribute('data-theme', stored);
-          }
-        } catch (error) {
-          /* ignore */
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports | Expense Tracker</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('expense-tracker-theme');
+        if (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          stored = 'dark';
         }
-      }());
-    </script>
-  </head>
-  <body class="dashboard-page">
+        if (stored) {
+          document.documentElement.setAttribute('data-theme', stored);
+        }
+      } catch (error) {
+        /* ignore */
+      }
+    }());
+  </script>
+</head>
+
+<body class="dashboard-page">
+  <% const safeAnalytics=analytics || {}; %>
     <div class="dashboard-layout">
       <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
@@ -32,7 +35,7 @@
             ◀
           </button>
         </div>
-        
+
         <nav class="sidebar-nav">
           <a href="/transactions">
             <span class="nav-icon">📊</span>
@@ -42,21 +45,36 @@
             <span class="nav-icon">📈</span>
             <span>Reports</span>
           </a>
+          <a href="/profile">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+          </a>
         </nav>
-        
+
         <div class="sidebar-footer">
           <div class="user-info">
-            <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
+            <% if (user.profilePhoto) { %>
+              <img src="<%= user.profilePhoto %>" alt="<%= user.name %>" class="user-avatar-img" />
+            <% } else { %>
+              <div class="user-avatar">
+                <%= user.name.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
             <div class="user-details">
-              <p class="user-name"><%= user.name %></p>
-              <p class="user-email"><%= user.email %></p>
+              <p class="user-name">
+                <%= user.name %>
+              </p>
+              <p class="user-email">
+                <%= user.email %>
+              </p>
             </div>
           </div>
           <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
             <span id="theme-label">Theme</span>
           </button>
           <form action="/logout" method="POST" style="margin-top: 8px;">
-            <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center;">Logout</button>
+            <button type="submit" class="btn btn-secondary"
+              style="width: 100%; justify-content: center;">Logout</button>
           </form>
         </div>
       </aside>
@@ -83,172 +101,245 @@
         </header>
 
         <div class="content-body">
-    <main class="dashboard-grid">
-      <section class="card">
-        <div class="card-header">
-          <h2>Filter report</h2>
-          <% if (report.filters.displayRange) { %>
-          <span class="muted">Range: <%= report.filters.displayRange %></span>
-          <% } %>
-        </div>
-        <form class="form" method="GET" action="/reports">
-          <div class="form-grid">
-            <div class="form-field">
-              <label for="startDate">Start date</label>
-              <input type="date" id="startDate" name="startDate" value="<%= report.filters.startDate %>" />
-            </div>
-            <div class="form-field">
-              <label for="endDate">End date</label>
-              <input type="date" id="endDate" name="endDate" value="<%= report.filters.endDate %>" />
-            </div>
-            <div class="form-field">
-              <label for="category">Category</label>
-              <select id="category" name="category">
-                <option value="">All categories</option>
-                <% report.categories.forEach(function(category){ %>
-                <option value="<%= category %>" <%= report.filters.category === category ? 'selected' : '' %>><%= category %></option>
-                <% }) %>
-              </select>
-            </div>
-          </div>
-          <div class="filter-actions">
-            <button type="submit" class="btn primary">Apply filters</button>
-            <a class="btn ghost" href="/reports">Reset</a>
-          </div>
-        </form>
-      </section>
+          <main class="dashboard-grid">
+            <section class="card">
+              <div class="card-header">
+                <h2>Filter report</h2>
+                <% if (report.filters.displayRange) { %>
+                  <span class="muted">Range: <%= report.filters.displayRange %></span>
+                  <% } %>
+              </div>
+              <form class="form" method="GET" action="/reports">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label for="startDate">Start date</label>
+                    <input type="date" id="startDate" name="startDate" value="<%= report.filters.startDate %>" />
+                  </div>
+                  <div class="form-field">
+                    <label for="endDate">End date</label>
+                    <input type="date" id="endDate" name="endDate" value="<%= report.filters.endDate %>" />
+                  </div>
+                  <div class="form-field">
+                    <label for="category">Category</label>
+                    <select id="category" name="category">
+                      <option value="">All categories</option>
+                      <% report.categories.forEach(function(category){ %>
+                        <option value="<%= category %>" <%=report.filters.category===category ? 'selected' : '' %>><%=
+                            category %>
+                        </option>
+                        <% }) %>
+                    </select>
+                  </div>
+                </div>
+                <div class="filter-actions">
+                  <button type="submit" class="btn primary">Apply filters</button>
+                  <a class="btn ghost" href="/reports">Reset</a>
+                </div>
+              </form>
+            </section>
 
-      <section class="card summary">
-        <h2>Summary</h2>
-        <% const netClass = report.summary.net >= 0 ? 'income' : 'expense'; %>
-        <div class="summary-metrics">
-          <article>
-            <h3>Total Income</h3>
-            <p class="metric income">Rs <%= report.summary.totalIncome.toFixed(2) %></p>
-          </article>
-          <article>
-            <h3>Total Expense</h3>
-            <p class="metric expense">Rs <%= report.summary.totalExpense.toFixed(2) %></p>
-          </article>
-          <article>
-            <h3>Net</h3>
-            <p class="metric <%= netClass %>">Rs <%= report.summary.net.toFixed(2) %></p>
-          </article>
-          <article>
-            <h3>Transactions</h3>
-            <p class="metric"><%= report.summary.transactionCount %></p>
-          </article>
-        </div>
-        <div class="download-actions">
-          <a class="btn" href="/reports/export?format=pdf<%= querySuffix %>">Download PDF</a>
-          <a class="btn" href="/reports/export?format=csv<%= querySuffix %>">Download CSV</a>
-        </div>
-      </section>
+            <section class="card summary">
+              <h2>Summary</h2>
+              <% const netClass=report.summary.net>= 0 ? 'income' : 'expense'; %>
+                <div class="summary-metrics">
+                  <article>
+                    <h3>Total Income</h3>
+                    <p class="metric income">Rs <%= report.summary.totalIncome.toFixed(2) %>
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Total Expense</h3>
+                    <p class="metric expense">Rs <%= report.summary.totalExpense.toFixed(2) %>
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Net</h3>
+                    <p class="metric <%= netClass %>">Rs <%= report.summary.net.toFixed(2) %>
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Transactions</h3>
+                    <p class="metric">
+                      <%= report.summary.transactionCount %>
+                    </p>
+                  </article>
+                </div>
+                <div class="download-actions">
+                  <a class="btn" href="/reports/export?format=pdf<%= querySuffix %>">Download PDF</a>
+                  <a class="btn" href="/reports/export?format=csv<%= querySuffix %>">Download CSV</a>
+                </div>
+            </section>
 
-      <section class="card">
-        <div class="card-header">
-          <h2>Monthly summary</h2>
-        </div>
-        <% if (!report.monthly.length) { %>
-        <p class="empty-state">No monthly data for the selected filters.</p>
-        <% } else { %>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th class="numeric">Income (Rs)</th>
-                <th class="numeric">Expense (Rs)</th>
-                <th class="numeric">Net (Rs)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% report.monthly.forEach(function(entry){ %>
-              <tr>
-                <td><%= entry.label %></td>
-                <td class="numeric"><%= entry.income.toFixed(2) %></td>
-                <td class="numeric"><%= entry.expense.toFixed(2) %></td>
-                <td class="numeric"><%= entry.net.toFixed(2) %></td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <% } %>
-      </section>
+            <section class="card chart-card">
+              <div class="card-header">
+                <h2>Income vs Expense</h2>
+              </div>
+              <p class="empty-state" data-empty="income-vs-expense">Add income and expense entries to unlock this chart.
+              </p>
+              <canvas id="incomeVsExpenseChart" class="hidden"></canvas>
+            </section>
 
-      <section class="card">
-        <div class="card-header">
-          <h2>Yearly summary</h2>
-        </div>
-        <% if (!report.yearly.length) { %>
-        <p class="empty-state">No yearly data for the selected filters.</p>
-        <% } else { %>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Year</th>
-                <th class="numeric">Income (Rs)</th>
-                <th class="numeric">Expense (Rs)</th>
-                <th class="numeric">Net (Rs)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% report.yearly.forEach(function(entry){ %>
-              <tr>
-                <td><%= entry.label %></td>
-                <td class="numeric"><%= entry.income.toFixed(2) %></td>
-                <td class="numeric"><%= entry.expense.toFixed(2) %></td>
-                <td class="numeric"><%= entry.net.toFixed(2) %></td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <% } %>
-      </section>
+            <section class="card chart-card">
+              <div class="card-header">
+                <h2>Savings Trend</h2>
+              </div>
+              <p class="empty-state" data-empty="savings-trend">Add transactions to see how your savings trend evolves.
+              </p>
+              <canvas id="savingsTrendChart" class="hidden"></canvas>
+            </section>
 
-      <section class="card transaction-table">
-        <div class="card-header">
-          <h2>Transactions</h2>
-          <span class="muted"><%= report.summary.transactionCount %> records</span>
-        </div>
-        <% if (!report.transactions.length) { %>
-        <p class="empty-state">No transactions match the current filters.</p>
-        <% } else { %>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th class="numeric">Amount (Rs)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% report.transactions.forEach(function(transaction){ %>
-              <tr>
-                <td><%= new Date(transaction.date).toISOString().slice(0, 10) %></td>
-                <td class="capitalize <%= transaction.type %>"><%= transaction.type %></td>
-                <td><%= transaction.category || 'Uncategorized' %></td>
-                <td><%= transaction.description || '-' %></td>
-                <td class="numeric"><%= Number(transaction.amount || 0).toFixed(2) %></td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <% } %>
-      </section>
-    </main>
+            <section class="card chart-card">
+              <div class="card-header">
+                <h2>Expense by Category</h2>
+              </div>
+              <p class="empty-state" data-empty="expense-categories">Add expense transactions to break down spending by
+                category.</p>
+              <canvas id="expenseCategoryChart" class="hidden"></canvas>
+            </section>
+
+            <section class="card chart-card">
+              <div class="card-header">
+                <h2>Income Sources</h2>
+              </div>
+              <p class="empty-state" data-empty="income-sources">Log income entries to analyse your income streams.</p>
+              <canvas id="incomeSourceChart" class="hidden"></canvas>
+            </section>
+
+            <section class="card">
+              <div class="card-header">
+                <h2>Monthly summary</h2>
+              </div>
+              <% if (!report.monthly.length) { %>
+                <p class="empty-state">No monthly data for the selected filters.</p>
+                <% } else { %>
+                  <div class="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Month</th>
+                          <th class="numeric">Income (Rs)</th>
+                          <th class="numeric">Expense (Rs)</th>
+                          <th class="numeric">Net (Rs)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% report.monthly.forEach(function(entry){ %>
+                          <tr>
+                            <td>
+                              <%= entry.label %>
+                            </td>
+                            <td class="numeric">
+                              <%= entry.income.toFixed(2) %>
+                            </td>
+                            <td class="numeric">
+                              <%= entry.expense.toFixed(2) %>
+                            </td>
+                            <td class="numeric">
+                              <%= entry.net.toFixed(2) %>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                  <% } %>
+            </section>
+
+            <section class="card">
+              <div class="card-header">
+                <h2>Yearly summary</h2>
+              </div>
+              <% if (!report.yearly.length) { %>
+                <p class="empty-state">No yearly data for the selected filters.</p>
+                <% } else { %>
+                  <div class="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Year</th>
+                          <th class="numeric">Income (Rs)</th>
+                          <th class="numeric">Expense (Rs)</th>
+                          <th class="numeric">Net (Rs)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% report.yearly.forEach(function(entry){ %>
+                          <tr>
+                            <td>
+                              <%= entry.label %>
+                            </td>
+                            <td class="numeric">
+                              <%= entry.income.toFixed(2) %>
+                            </td>
+                            <td class="numeric">
+                              <%= entry.expense.toFixed(2) %>
+                            </td>
+                            <td class="numeric">
+                              <%= entry.net.toFixed(2) %>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                  <% } %>
+            </section>
+
+            <section class="card transaction-table">
+              <div class="card-header">
+                <h2>Transactions</h2>
+                <span class="muted">
+                  <%= report.summary.transactionCount %> records
+                </span>
+              </div>
+              <% if (!report.transactions.length) { %>
+                <p class="empty-state">No transactions match the current filters.</p>
+                <% } else { %>
+                  <div class="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Type</th>
+                          <th>Category</th>
+                          <th>Description</th>
+                          <th class="numeric">Amount (Rs)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% report.transactions.forEach(function(transaction){ %>
+                          <tr>
+                            <td>
+                              <%= new Date(transaction.date).toISOString().slice(0, 10) %>
+                            </td>
+                            <td class="capitalize <%= transaction.type %>">
+                              <%= transaction.type %>
+                            </td>
+                            <td>
+                              <%= transaction.category || 'Uncategorized' %>
+                            </td>
+                            <td>
+                              <%= transaction.description || '-' %>
+                            </td>
+                            <td class="numeric">
+                              <%= Number(transaction.amount || 0).toFixed(2) %>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                  <% } %>
+            </section>
+          </main>
         </div>
       </main>
     </div>
-    
+
+    <script id="dashboard-analytics-data" type="application/json"><%- JSON.stringify(analytics || null) %></script>
     <script src="/js/ui.js"></script>
+    <script src="/vendor/chart.umd.js"></script>
+    <script src="/js/dashboard.js"></script>
     <script>
       // Dashboard sidebar toggle
       const sidebar = document.getElementById('sidebar');
@@ -264,7 +355,7 @@
           sidebar.classList.add('minimized');
         }
 
-        sidebarToggle.addEventListener('click', function() {
+        sidebarToggle.addEventListener('click', function () {
           sidebar.classList.toggle('minimized');
           localStorage.setItem('sidebar-minimized', sidebar.classList.contains('minimized'));
         });
@@ -272,18 +363,19 @@
 
       // Mobile sidebar toggle
       if (mobileToggle) {
-        mobileToggle.addEventListener('click', function() {
+        mobileToggle.addEventListener('click', function () {
           sidebar.classList.toggle('is-open');
           sidebarOverlay.classList.toggle('is-open');
         });
       }
 
       if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', function() {
+        sidebarOverlay.addEventListener('click', function () {
           sidebar.classList.remove('is-open');
           sidebarOverlay.classList.remove('is-open');
         });
       }
     </script>
-  </body>
+</body>
+
 </html>
