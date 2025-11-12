@@ -101,16 +101,16 @@
         </header>
 
         <div class="content-body">
-          <div class="reports-layout">
-            <aside class="card report-filter">
+          <main class="dashboard-grid">
+            <section class="card">
               <div class="card-header">
                 <h2>Filter report</h2>
                 <% if (report.filters.displayRange) { %>
                   <span class="muted">Range: <%= report.filters.displayRange %></span>
                   <% } %>
               </div>
-              <form class="form report-filter-form" method="GET" action="/reports">
-                <div class="report-filter-fields">
+              <form class="form" method="GET" action="/reports">
+                <div class="form-grid">
                   <div class="form-field">
                     <label for="startDate">Start date</label>
                     <input type="date" id="startDate" name="startDate" value="<%= report.filters.startDate %>" />
@@ -131,14 +131,13 @@
                     </select>
                   </div>
                 </div>
-                <div class="report-filter-actions">
+                <div class="filter-actions">
                   <button type="submit" class="btn primary">Apply filters</button>
                   <a class="btn ghost" href="/reports">Reset</a>
                 </div>
               </form>
-            </aside>
+            </section>
 
-            <div class="report-main">
             <section class="card summary">
               <h2>Summary</h2>
               <% const netClass=report.summary.net>= 0 ? 'income' : 'expense'; %>
@@ -206,7 +205,7 @@
               <canvas id="incomeSourceChart" class="hidden"></canvas>
             </section>
 
-            <section class="card report-table">
+            <section class="card">
               <div class="card-header">
                 <h2>Monthly summary</h2>
               </div>
@@ -246,7 +245,7 @@
                   <% } %>
             </section>
 
-            <section class="card report-table">
+            <section class="card">
               <div class="card-header">
                 <h2>Yearly summary</h2>
               </div>
@@ -332,8 +331,7 @@
                   </div>
                   <% } %>
             </section>
-            </div>
-          </div>
+          </main>
         </div>
       </main>
     </div>

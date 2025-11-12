@@ -154,20 +154,16 @@
                                 <input type="hidden" name="limitId" data-field="limitId"
                                   value="<%= limitFormState && limitFormState.limitId ? limitFormState.limitId : '' %>" />
 
-                                <div class="limit-field">
-                                  <label for="limit-category">Category</label>
-                                  <input id="limit-category" name="category" type="text" data-field="category"
-                                    value="<%= limitFormState && limitFormState.category ? limitFormState.category : '' %>"
-                                    placeholder="e.g. Groceries" required />
-                                </div>
+                                <label for="limit-category">Category</label>
+                                <input id="limit-category" name="category" type="text" data-field="category"
+                                  value="<%= limitFormState && limitFormState.category ? limitFormState.category : '' %>"
+                                  placeholder="e.g. Groceries" required />
 
-                                <div class="limit-field">
-                                  <label for="limit-amount">Monthly Limit (Rs)</label>
-                                  <input id="limit-amount" name="limit" type="number" min="0" step="0.01"
-                                    data-field="limit"
-                                    value="<%= limitFormState && limitFormState.limit !== undefined && limitFormState.limit !== '' ? Number(limitFormState.limit).toFixed(2) : '' %>"
-                                    required />
-                                </div>
+                                <label for="limit-amount">Monthly Limit (Rs)</label>
+                                <input id="limit-amount" name="limit" type="number" min="0" step="0.01"
+                                  data-field="limit"
+                                  value="<%= limitFormState && limitFormState.limit !== undefined && limitFormState.limit !== '' ? Number(limitFormState.limit).toFixed(2) : '' %>"
+                                  required />
 
                                 <div class="limit-form-actions">
                                   <button type="submit" class="btn primary" data-role="submit-limit"
@@ -265,7 +261,7 @@
                             </ul>
                             <% } %>
                               <form
-                                action="/transactions"
+                                action="<%= incomeFormData && incomeFormData.transactionId ? `/transactions/${incomeFormData.transactionId}` : '/transactions' %>"
                                 method="POST" class="form" data-form="income"
                                 data-mode="<%= incomeFormData && incomeFormData.transactionId ? 'edit' : 'create' %>"
                                 data-transaction-id="<%= incomeFormData && incomeFormData.transactionId ? incomeFormData.transactionId : '' %>"
@@ -324,7 +320,7 @@
                             </ul>
                             <% } %>
                               <form
-                                action="/transactions"
+                                action="<%= expenseFormData && expenseFormData.transactionId ? `/transactions/${expenseFormData.transactionId}` : '/transactions' %>"
                                 method="POST" class="form" data-form="expense"
                                 data-mode="<%= expenseFormData && expenseFormData.transactionId ? 'edit' : 'create' %>"
                                 data-transaction-id="<%= expenseFormData && expenseFormData.transactionId ? expenseFormData.transactionId : '' %>"

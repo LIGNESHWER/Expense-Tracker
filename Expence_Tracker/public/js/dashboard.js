@@ -333,12 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		function setFields(values = {}) {
 			if (amountField) {
-				if (values.amount !== undefined && values.amount !== '') {
-					const numAmount = Number.parseFloat(values.amount);
-					amountField.value = Number.isFinite(numAmount) ? numAmount.toString() : '';
-				} else {
-					amountField.value = '';
-				}
+				amountField.value = values.amount !== undefined ? values.amount : '';
 			}
 			if (dateField) {
 				dateField.value = values.date || defaultDate;
@@ -357,13 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			form.dataset.mode = mode;
 			form.dataset.transactionId = state.transactionId;
 
-		if (mode === 'edit' && state.transactionId) {
-			const newAction = `${defaultAction}/${state.transactionId}`;
-			form.action = newAction;
-			console.log('Edit mode - setting form action:', newAction, 'Transaction ID:', state.transactionId);
-			if (methodInput) {
-				methodInput.value = 'PUT';
-			}
+			if (mode === 'edit' && state.transactionId) {
+				form.action = `${defaultAction}/${state.transactionId}`;
+				if (methodInput) {
+					methodInput.value = 'PUT';
+				}
 				if (titleElement) {
 					titleElement.textContent = editTitle;
 				}
@@ -436,14 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (descriptionField && descriptionField.value) {
 				descriptionField.value = descriptionField.value.trim();
 			}
-
-			// Log form details for debugging
-			console.log('Form submission:', {
-				action: form.action,
-				method: form.method,
-				_method: methodInput ? methodInput.value : 'none',
-				mode: state.mode,
-			});
 		});
 
 		if (cancelButton) {
@@ -504,17 +489,16 @@ document.addEventListener('DOMContentLoaded', () => {
 					return;
 				}
 
-			const transaction = {
-				id: button.dataset.id,
-				amount: button.dataset.amount,
-				date: button.dataset.date,
-				type,
-				category: button.dataset.category,
-				description: button.dataset.description,
-			};
+				const transaction = {
+					id: button.dataset.id,
+					amount: button.dataset.amount,
+					date: button.dataset.date,
+					type,
+					category: button.dataset.category,
+					description: button.dataset.description,
+				};
 
-			console.log('Edit button clicked:', transaction);
-			controller.setEditMode(transaction);
+				controller.setEditMode(transaction);
 
 				const otherType = type === 'income' ? 'expense' : 'income';
 				if (controllers[otherType]) {

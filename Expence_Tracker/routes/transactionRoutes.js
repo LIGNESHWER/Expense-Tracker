@@ -104,7 +104,7 @@ router.post('/', transactionValidationRules, async (req, res, next) => {
   }
 });
 
-async function updateTransaction(req, res, next) {
+router.put('/:id', transactionValidationRules, async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -130,12 +130,47 @@ async function updateTransaction(req, res, next) {
 
     await transaction.save();
 
-    req.session.successMessage = 'Transaction updated successfully.';
+    return res.redirect('/transactions');
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const deleted = await Transaction.findOneAndDelete({
+      _id: req.params.id,
+      user: req.session.user.id,
+    });
+
+    if (!deleted) {
+      return res.status(404).render('error', { message: 'Transaction not found.' });
+    }
 
     return res.redirect('/transactions');
   } catch (error) {
     return next(error);
   }
+});
+
+function persistFormState(req, errors, transactionId) {
+  req.session.formErrors = errors;
+  const formData = {
+    amount: req.body.amount,
+    date:
+      req.body.date instanceof Date
+        ? req.body.date.toISOString().slice(0, 10)
+        : req.body.date || '',
+    type: req.body.type || '',
+    category: sanitizeText(req.body.category || ''),
+    description: sanitizeText(req.body.description || ''),
+  };
+
+  if (transactionId) {
+    formData.transactionId = transactionId;
+  }
+
+  req.session.formData = formData;
 }
 
 // DELETE all transactions with password confirmation
@@ -203,46 +238,5 @@ router.post('/delete-all', async (req, res, next) => {
     });
   }
 });
-
-router.put('/:id', transactionValidationRules, updateTransaction);
-
-router.post('/:id', transactionValidationRules, updateTransaction);
-
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const deleted = await Transaction.findOneAndDelete({
-      _id: req.params.id,
-      user: req.session.user.id,
-    });
-
-    if (!deleted) {
-      return res.status(404).render('error', { message: 'Transaction not found.' });
-    }
-
-    return res.redirect('/transactions');
-  } catch (error) {
-    return next(error);
-  }
-});
-
-function persistFormState(req, errors, transactionId) {
-  req.session.formErrors = errors;
-  const formData = {
-    amount: req.body.amount,
-    date:
-      req.body.date instanceof Date
-        ? req.body.date.toISOString().slice(0, 10)
-        : req.body.date || '',
-    type: req.body.type || '',
-    category: sanitizeText(req.body.category || ''),
-    description: sanitizeText(req.body.description || ''),
-  };
-
-  if (transactionId) {
-    formData.transactionId = transactionId;
-  }
-
-  req.session.formData = formData;
-}
 
 module.exports = router;

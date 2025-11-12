@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof title !== 'undefined' ? title : 'Dashboard' %> | Expense Tracker</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('expense-tracker-theme');
+          if (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            stored = 'dark';
+          }
+          if (stored) {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (error) {}
+      }());
+    </script>
+  </head>
+  <body>
+    <div class="dashboard-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h1>💰 Expense Tracker</h1>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <a href="/transactions" class="<%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="/reports" class="<%= typeof currentPage !== 'undefined' && currentPage === 'reports' ? 'active' : '' %>">
+            <span class="nav-icon">📈</span>
+            <span>Reports</span>
+          </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
+            <div class="user-details">
+              <p class="user-name"><%= user.name %></p>
+              <p class="user-email"><%= user.email %></p>
+            </div>
+          </div>
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+            <span id="theme-label">Theme</span>
+          </button>
+          <form action="/auth/logout" method="POST" style="margin-top: 8px;">
+            <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center;">Logout</button>
+          </form>
+        </div>
+      </aside>
+
+      <!-- Overlay for mobile -->
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="content-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+              <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </button>
+            <h2><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %></h2>
+          </div>
+          <div class="header-actions">
+            <span style="font-size: 14px; color: var(--muted);">Welcome, <%= user.name %></span>
+          </div>
+        </header>
+
+        <div class="content-body">
+          <%- body %>
+        </div>
+      </main>
+    </div>
+
+    <script src="/js/ui.js"></script>
+    <script>
+      // Dashboard sidebar toggle
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      const mobileToggle = document.getElementById('mobile-toggle');
+
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('is-open');
+          sidebarOverlay.classList.toggle('is-open');
+        });
+      }
+
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+          sidebar.classList.remove('is-open');
+          sidebarOverlay.classList.remove('is-open');
+        });
+      }
+    </script>
+  </body>
+</html>

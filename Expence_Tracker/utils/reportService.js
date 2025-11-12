@@ -168,7 +168,7 @@ async function buildReport(userId, options = {}) {
       },
       { $sort: { '_id.year': 1 } },
     ]),
-    Transaction.distinct('category', matchStage),
+    Transaction.distinct('category', { user: toObjectId(userId) }),
   ]);
 
   let totalIncome = 0;
